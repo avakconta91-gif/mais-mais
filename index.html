@@ -1,0 +1,1207 @@
+<!DOCTYPE html>  <html lang="pt-BR">    <head>    
+<meta charset="UTF-8">    
+<meta name="viewport" content="width=device-width, initial-scale=1.0">    
+<title>Painel Administrativo - Advocacia & Associados</title>    
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">    
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">    
+<link href="https://cdn.jsdelivr.net/npm/fontsource-inter@4.0.0/index.css" rel="stylesheet">    
+<style>    
+* {    
+font-family: 'Inter', sans-serif;    
+}    
+.metric-card {    
+transition: all 0.3s ease;    
+}    
+.metric-card:hover {    
+transform: translateY(-2px);    
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);    
+}    
+.status-badge {    
+padding: 4px 12px;    
+border-radius: 20px;    
+font-size: 12px;    
+font-weight: 600;    
+}    
+.status-confirmado { background: #d1fae5; color: #065f46; }    
+.status-pendente { background: #fef3c7; color: #92400e; }    
+.status-reagendado { background: #ede9fe; color: #5b21b6; }    
+.status-cancelado { background: #fee2e2; color: #991b1b; }    
+.area-tag {    
+padding: 4px 10px;    
+border-radius: 6px;    
+font-size: 11px;    
+font-weight: 600;    
+background: #dbeafe;    
+color: #1e40af;    
+}    
+.btn-primary {    
+transition: all 0.2s ease;    
+}    
+.btn-primary:hover {    
+transform: translateY(-1px);    
+box-shadow: 0 4px 12px rgba(0,0,0,0.15);    
+}    
+.table-row {    
+transition: all 0.2s ease;    
+}    
+.table-row:hover {    
+background: #f9fafb;    
+}    
+.pagination-btn {    
+transition: all 0.2s ease;    
+}    
+.pagination-btn:hover {    
+background: #f3f4f6;    
+}    
+.pagination-btn.active {    
+background: #3b82f6;    
+color: white;    
+}    
+.loading-skeleton {    
+background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);    
+background-size: 200% 100%;    
+animation: loading 1.5s infinite;    
+}    
+@keyframes loading {    
+0% { background-position: 200% 0; }    
+100% { background-position: -200% 0; }    
+}    
+.toast {    
+transform: translateX(100%);    
+opacity: 0;    
+transition: all 0.3s ease;    
+}    
+.toast.show {    
+transform: translateX(0);    
+opacity: 1;    
+}    
+.dropdown-menu {    
+display: none;    
+position: absolute;    
+right: 0;    
+top: 100%;    
+background: white;    
+border: 1px solid #e5e7eb;    
+border-radius: 8px;    
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);    
+z-index: 50;    
+min-width: 160px;    
+}    
+.dropdown-menu.show {    
+display: block;    
+}    
+.dropdown-item {    
+padding: 8px 16px;    
+transition: all 0.2s ease;    
+}    
+.dropdown-item:hover {    
+background: #f3f4f6;    
+}    
+.modal-overlay {    
+background: rgba(0,0,0,0.5);    
+backdrop-filter: blur(4px);    
+}    
+.modal {    
+transform: scale(0.95);    
+opacity: 0;    
+transition: all 0.3s ease;    
+}    
+.modal.show {    
+transform: scale(1);    
+opacity: 1;    
+}    
+@media (max-width: 768px) {    
+.metrics-grid {    
+grid-template-columns: repeat(2, 1fr);    
+}    
+.filters-grid {    
+grid-template-columns: 1fr;    
+}    
+.table-container {    
+overflow-x: auto;    
+}    
+.hidden-mobile {    
+display: none;    
+}    
+}    
+</style>    
+</head>    
+<body class="bg-gray-50 min-h-screen">    
+<!-- Toast Notification -->    
+<div id="toast" class="toast fixed top-4 right-4 bg-white border-l-4 border-green-500 rounded-lg shadow-lg p-4 z-50">    
+<div class="flex items-center gap-3">    
+<i class="ri-checkbox-circle-fill text-green-500 text-xl"></i>    
+<div>    
+<p class="font-semibold text-gray-900" id="toast-title">Sucesso</p>    
+<p class="text-sm text-gray-600" id="toast-message">Operação realizada</p>    
+</div>    
+</div>    
+</div>    
+<!-- Header -->    
+<header class="bg-white shadow-sm border-b sticky top-0 z-40">    
+<div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">    
+<div class="flex items-center gap-4">    
+<div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">    
+<i class="ri-scale-line text-white text-xl"></i>    
+</div>    
+<div>    
+<h1 class="text-xl font-bold text-gray-900">Painel Administrativo</h1>    
+<p class="text-sm text-gray-500">Gerencie seus agendamentos e clientes</p>    
+</div>    
+</div>    
+<button    
+onclick="logout()"    
+class="btn-primary flex items-center gap-2 px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition"    
+>    
+<i class="ri-logout-box-r-line"></i>    
+<span class="hidden-mobile">Sair do Sistema</span>    
+</button>    
+</div>    
+</header>    
+<main class="max-w-7xl mx-auto px-4 py-6">    
+<!-- Metrics Grid -->    
+<div class="metrics-grid grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">    
+<div class="metric-card bg-white p-4 rounded-xl shadow-sm border">    
+<div class="flex items-center justify-between">    
+<div>    
+<p class="text-sm text-gray-500">Total</p>    
+<p class="text-2xl font-bold text-gray-900" id="metric-total">0</p>    
+</div>    
+<div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">    
+<i class="ri-group-line text-blue-600 text-xl"></i>    
+</div>    
+</div>    
+</div>    
+<div class="metric-card bg-white p-4 rounded-xl shadow-sm border">    
+<div class="flex items-center justify-between">    
+<div>    
+<p class="text-sm text-gray-500">Pendente</p>    
+<p class="text-2xl font-bold text-gray-900" id="metric-pending">0</p>    
+</div>    
+<div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">    
+<i class="ri-time-line text-yellow-600 text-xl"></i>    
+</div>    
+</div>    
+</div>    
+<div class="metric-card bg-white p-4 rounded-xl shadow-sm border">    
+<div class="flex items-center justify-between">    
+<div>    
+<p class="text-sm text-gray-500">Confirmado</p>    
+<p class="text-2xl font-bold text-gray-900" id="metric-confirmed">0</p>    
+</div>    
+<div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">    
+<i class="ri-checkbox-circle-line text-green-600 text-xl"></i>    
+</div>    
+</div>    
+</div>    
+<div class="metric-card bg-white p-4 rounded-xl shadow-sm border">    
+<div class="flex items-center justify-between">    
+<div>    
+<p class="text-sm text-gray-500">Reagendado</p>    
+<p class="text-2xl font-bold text-gray-900" id="metric-rescheduled">0</p>    
+</div>    
+<div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">    
+<i class="ri-refresh-line text-purple-600 text-xl"></i>    
+</div>    
+</div>    
+</div>    
+<div class="metric-card bg-white p-4 rounded-xl shadow-sm border">    
+<div class="flex items-center justify-between">    
+<div>    
+<p class="text-sm text-gray-500">Cancelado</p>    
+<p class="text-2xl font-bold text-gray-900" id="metric-cancelled">0</p>    
+</div>    
+<div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">    
+<i class="ri-close-circle-line text-red-600 text-xl"></i>    
+</div>    
+</div>    
+</div>    
+</div>    
+<!-- Filters -->    
+<div class="bg-white p-4 rounded-xl shadow-sm border mb-6">    
+<h3 class="font-semibold mb-4 flex items-center gap-2">    
+<i class="ri-filter-3-line"></i>    
+Filtros    
+</h3>    
+<div class="filters-grid grid grid-cols-1 md:grid-cols-4 gap-4">    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Status</label>    
+<select    
+id="filter-status"    
+class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"    
+onchange="applyFilters()"    
+>    
+<option value="">Todos os Status</option>    
+<option value="Confirmado">Confirmado</option>    
+<option value="Pendente">Pendente</option>    
+<option value="Reagendado">Reagendado</option>    
+<option value="Cancelado">Cancelado</option>    
+</select>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Área Jurídica</label>    
+<select    
+id="filter-area"    
+class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"    
+onchange="applyFilters()"    
+>    
+<option value="">Todas as Áreas</option>    
+<option value="Trabalhista">Trabalhista</option>    
+<option value="Família">Família</option>    
+<option value="Criminal">Criminal</option>    
+<option value="Tributário">Tributário</option>    
+</select>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Data</label>    
+<input    
+type="date"    
+id="filter-date"    
+class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"    
+onchange="applyFilters()"    
+/>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Ações</label>    
+<div class="flex gap-2">    
+<button    
+onclick="clearFilters()"    
+class="btn-primary flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"    
+>    
+<i class="ri-eraser-line"></i>    
+<span class="hidden-mobile">Limpar</span>    
+</button>    
+<button    
+onclick="exportCSV()"    
+class="btn-primary flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition"    
+>    
+<i class="ri-download-line"></i>    
+<span class="hidden-mobile">Exportar CSV</span>    
+</button>    
+</div>    
+</div>    
+</div>    
+</div>    
+<!-- Search Bar -->    
+<div class="bg-white p-4 rounded-xl shadow-sm border mb-6">    
+<div class="flex items-center gap-4">    
+<div class="flex-1 relative">    
+<i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>    
+<input    
+type="text"    
+id="search-input"    
+placeholder="Buscar por nome, email ou telefone..."    
+class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"    
+oninput="applyFilters()"    
+/>    
+</div>    
+<div class="flex items-center gap-2">    
+<span class="text-sm text-gray-500">Exibindo</span>    
+<select    
+id="items-per-page"    
+class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"    
+onchange="changeItemsPerPage()"    
+>    
+<option value="10">10</option>    
+<option value="25" selected>25</option>    
+<option value="50">50</option>    
+<option value="100">100</option>    
+</select>    
+<span class="text-sm text-gray-500">registros</span>    
+</div>    
+</div>    
+</div>    
+<!-- Table -->    
+<div class="bg-white rounded-xl shadow-sm border overflow-hidden">    
+<div class="p-4 border-b flex justify-between items-center">    
+<h3 class="font-semibold flex items-center gap-2">    
+<i class="ri-calendar-event-line"></i>    
+Agendamentos    
+</h3>    
+<span class="text-sm text-gray-500" id="table-info">Carregando...</span>    
+</div>    
+<div class="table-container overflow-x-auto">    
+<table class="w-full">    
+<thead class="bg-gray-50">    
+<tr>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100" onclick="sortTable('nome')">    
+<div class="flex items-center gap-1">    
+Nome    
+<i class="ri-arrow-up-down-line text-gray-400"></i>    
+</div>    
+</th>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 hidden-mobile">Telefone</th>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100" onclick="sortTable('dataHora')">    
+<div class="flex items-center gap-1">    
+Data/Hora    
+<i class="ri-arrow-up-down-line text-gray-400"></i>    
+</div>    
+</th>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Área</th>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 hidden-mobile">Tipo</th>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100" onclick="sortTable('status')">    
+<div class="flex items-center gap-1">    
+Status    
+<i class="ri-arrow-up-down-line text-gray-400"></i>    
+</div>    
+</th>    
+<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>    
+</tr>    
+</thead>    
+<tbody class="divide-y" id="table-body">    
+<!-- Rows will be inserted here -->    
+</tbody>    
+</table>    
+</div>    
+<!-- Pagination -->    
+<div class="p-4 border-t flex justify-between items-center">    
+<button    
+id="prev-btn"    
+class="pagination-btn px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"    
+onclick="changePage(-1)"    
+>    
+<i class="ri-arrow-left-s-line"></i>    
+<span class="hidden-mobile">Anterior</span>    
+</button>    
+<div class="flex gap-1" id="pagination-buttons">    
+<!-- Page buttons will be inserted here -->    
+</div>    
+<button    
+id="next-btn"    
+class="pagination-btn px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2"    
+onclick="changePage(1)"    
+>    
+<span class="hidden-mobile">Próximo</span>    
+<i class="ri-arrow-right-s-line"></i>    
+</button>    
+</div>    
+</div>    
+<!-- Footer -->    
+<footer class="text-center text-sm text-gray-500 py-6 mt-6">    
+© 2024 Advocacia & Associados. Todos os direitos reservados.    
+</footer>    
+</main>    
+<!-- Edit Modal -->    
+<div id="edit-modal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center">    
+<div class="modal bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">    
+<div class="p-6 border-b flex justify-between items-center">    
+<h3 class="text-lg font-bold">Atualizar Agendamento</h3>    
+<button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">    
+<i class="ri-close-line text-xl"></i>    
+</button>    
+</div>    
+<div class="p-6">    
+<form id="edit-form" onsubmit="saveAppointment(event)">    
+<input type="hidden" id="edit-id">    
+<div class="space-y-4">    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>    
+<input type="text" id="edit-nome" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Email</label>    
+<input type="email" id="edit-email" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>    
+<input type="text" id="edit-telefone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>    
+</div>    
+<div class="grid grid-cols-2 gap-4">    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Área</label>    
+<select id="edit-area" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">    
+<option value="Trabalhista">Trabalhista</option>    
+<option value="Família">Família</option>    
+<option value="Criminal">Criminal</option>    
+<option value="Tributário">Tributário</option>    
+</select>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Status</label>    
+<select id="edit-status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">    
+<option value="Confirmado">Confirmado</option>    
+<option value="Pendente">Pendente</option>    
+<option value="Reagendado">Reagendado</option>    
+<option value="Cancelado">Cancelado</option>    
+</select>    
+</div>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Data/Hora</label>    
+<input type="datetime-local" id="edit-dataHora" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>    
+</div>    
+<div>    
+<label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>    
+<input type="text" id="edit-tipo" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>    
+</div>    
+</div>    
+<div class="flex gap-3 mt-6">    
+<button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>    
+<button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>    
+</div>    
+</form>    
+</div>    
+</div>    
+</div>    
+<!-- Delete Confirmation Modal -->    
+<div id="delete-modal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center">    
+<div class="modal bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">    
+<div class="p-6">    
+<div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">    
+<i class="ri-delete-bin-line text-red-600 text-xl"></i>    
+</div>    
+<h3 class="text-lg font-bold text-center mb-2">Confirmar Exclusão</h3>    
+<p class="text-gray-600 text-center mb-6">Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>    
+<input type="hidden" id="delete-id">    
+<div class="flex gap-3">    
+<button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>    
+<button onclick="confirmDelete()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Excluir</button>    
+</div>    
+</div>    
+</div>    
+</div>    
+</div>    
+<script>    
+'use strict';  // ==================== SHARED UTILITIES (NO DUPLICATION) ====================  
+const Utils = {  
+sanitizeHTML(str) {  
+if (!str) return '';  
+const div = document.createElement('div');  
+div.textContent = str;  
+return div.innerHTML;  
+},  formatDateTime(isoString) {
+if (!isoString) return '';
+const date = new Date(isoString);
+return date.toLocaleString('pt-BR', {
+day: '2-digit',
+month: '2-digit',
+year: 'numeric',
+hour: '2-digit',
+minute: '2-digit'
+});
+},
+
+weightedRandom(items, weights) {
+const total = weights.reduce((a, b) => a + b, 0);
+let random = Math.random() * total;
+for (let i = 0; i < items.length; i++) {
+if (random < weights[i]) return items[i];
+random -= weights[i];
+}
+return items[items.length - 1];
+},
+
+debounce(func, delay) {
+let timer = null;
+return function(...args) {
+if (timer) clearTimeout(timer);
+timer = setTimeout(() => func.apply(this, args), delay);
+};
+},
+
+exportToCSV(data, filename = 'agendamentos.csv') {
+const headers = ['ID', 'Nome', 'Email', 'Telefone', 'Data/Hora', 'Área', 'Tipo', 'Status'];
+const rows = data.map(appt => [
+appt.id,
+"${appt.nome}",
+appt.email,
+appt.telefone,
+new Date(appt.dataHora).toLocaleString('pt-BR'),
+appt.area,
+appt.tipo,
+appt.status
+]);
+const csvContent = [
+headers.join(','),
+...rows.map(row => row.join(','))
+].join('\n');
+const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = filename;
+link.click();
+URL.revokeObjectURL(link.href);
+}
+};
+
+// ==================== DATA LAYER (MOCK DATA GENERATION) ====================
+const DataService = {
+generateMockData(count = 124) {
+const nomes = [
+'Ricardo Oliveira Santos', 'Mariana Costa', 'Augusto Ferreira', 'Carla Mendes',
+'Fernando Silva', 'Patricia Almeida', 'Roberto Souza', 'Ana Paula Lima',
+'Carlos Eduardo', 'Juliana Rodrigues', 'Marcos Antonio', 'Beatriz Santos',
+'Gabriel Oliveira', 'Camila Ferreira', 'Rodrigo Costa', 'Larissa Mendes'
+];
+const emails = [
+'ricardo@email.com', 'mariana@email.com', 'ferreira.adv@web.com', 'carla.m@corp.com',
+'fernando.silva@mail.com', 'patricia.almeida@web.com', 'roberto.souza@email.com',
+'ana.paula@corp.com', 'carlos.eduardo@mail.com', 'juliana.rod@web.com'
+];
+const areas = ['Trabalhista', 'Família', 'Criminal', 'Tributário'];
+const tipos = ['Consulta Inicial', 'Retorno Processual', 'Assessoria Mensal', 'Revisão de Débito', 'Audiência', 'Petição Urgente'];
+const statuses = ['Confirmado', 'Pendente', 'Reagendado', 'Cancelado'];
+const statusWeights = [0.52, 0.15, 0.10, 0.23];
+const data = [];
+
+for (let i = 0; i < count; i++) {
+const status = Utils.weightedRandom(statuses, statusWeights);
+const area = areas[Math.floor(Math.random() * areas.length)];
+const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+const date = new Date();
+date.setDate(date.getDate() + Math.floor(Math.random() * 60) - 10);
+date.setHours(Math.floor(Math.random() * 10) + 8, Math.floor(Math.random() * 12) * 5);
+const nomeIndex = Math.floor(Math.random() * nomes.length);
+const emailIndex = Math.floor(Math.random() * emails.length);
+
+data.push({
+id: apt-${Date.now()}-${i},
+nome: nomes[nomeIndex] + (i > 15 ?  ${i} : ''),
+email: emails[emailIndex].replace('@', +${i}@),
+telefone: (${10 + Math.floor(Math.random() * 20)}) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 90 + 10)}${Math.floor(Math.random() * 9 + 1)},
+dataHora: date.toISOString(),
+area: area,
+tipo: tipo,
+status: status,
+createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString(),
+updatedAt: new Date().toISOString()
+});
+}
+return data;
+
+}
+};
+
+// ==================== STATE MANAGEMENT (DERIVED DATA COMPUTED ON DEMAND) ====================
+const StateManager = (function() {
+// Private state - NO derived data stored
+let state = {
+appointments: [],
+currentPage: 1,
+itemsPerPage: 25,
+sortColumn: 'dataHora',
+sortDirection: 'asc',
+filters: {
+status: '',
+area: '',
+date: '',
+searchTerm: ''
+},
+editId: null,
+deleteId: null
+};
+
+// Event listeners cleanup references
+let eventListeners = [];
+
+return {
+get(key) {
+return state[key];
+},
+
+getAll() {
+return { ...state };
+},
+
+set(key, value) {
+state[key] = value;
+},
+
+setPartial(updates) {
+state = { ...state, ...updates };
+},
+
+reset() {
+state = {
+appointments: [],
+currentPage: 1,
+itemsPerPage: 25,
+sortColumn: 'dataHora',
+sortDirection: 'asc',
+filters: { status: '', area: '', date: '', searchTerm: '' },
+editId: null,
+deleteId: null
+};
+},
+
+addEventListener(target, event, handler) {
+target.addEventListener(event, handler);
+eventListeners.push({ target, event, handler });
+},
+
+cleanup() {
+eventListeners.forEach(({ target, event, handler }) => {
+target.removeEventListener(event, handler);
+});
+eventListeners = [];
+}
+
+};
+})();
+
+// ==================== BUSINESS LOGIC LAYER (NO DOM ACCESS) ====================
+const BusinessLogic = (function() {
+function getFilteredData() {
+const state = StateManager.getAll();
+let result = [...state.appointments];
+
+// Apply filters
+result = result.filter(appt => {
+if (state.filters.status && appt.status !== state.filters.status) return false;
+if (state.filters.area && appt.area !== state.filters.area) return false;
+if (state.filters.date && !appt.dataHora.startsWith(state.filters.date)) return false;
+if (state.filters.searchTerm) {
+const s = state.filters.searchTerm.toLowerCase();
+return (
+appt.nome.toLowerCase().includes(s) ||
+appt.email.toLowerCase().includes(s) ||
+appt.telefone.includes(s)
+);
+}
+return true;
+});
+
+// Apply sorting
+result.sort((a, b) => {
+let aVal = a[state.sortColumn] ?? '';
+let bVal = b[state.sortColumn] ?? '';
+
+if (state.sortColumn === 'dataHora') {
+aVal = new Date(aVal);
+bVal = new Date(bVal);
+} else if (state.sortColumn === 'nome') {
+aVal = aVal.toLowerCase();
+bVal = bVal.toLowerCase();
+}
+
+if (aVal < bVal) return state.sortDirection === 'asc' ? -1 : 1;
+if (aVal > bVal) return state.sortDirection === 'asc' ? 1 : -1;
+return 0;
+});
+
+return result;
+
+}
+
+function getPaginatedData(filteredData) {
+const { currentPage, itemsPerPage } = StateManager.getAll();
+const start = (currentPage - 1) * itemsPerPage;
+const end = start + itemsPerPage;
+return filteredData.slice(start, end);
+}
+
+function calculateMetrics() {
+const appointments = StateManager.get('appointments');
+return {
+total: appointments.length,
+pending: appointments.filter(a => a.status === 'Pendente').length,
+confirmed: appointments.filter(a => a.status === 'Confirmado').length,
+rescheduled: appointments.filter(a => a.status === 'Reagendado').length,
+cancelled: appointments.filter(a => a.status === 'Cancelado').length
+};
+}
+
+function getTotalPages(filteredData) {
+const itemsPerPage = StateManager.get('itemsPerPage');
+return Math.ceil(filteredData.length / itemsPerPage);
+}
+
+return {
+getFilteredData,
+getPaginatedData,
+calculateMetrics,
+getTotalPages,
+
+updateAppointment(id, data) {
+const appointments = StateManager.get('appointments');
+const appt = appointments.find(a => a.id === id);
+if (appt) {
+Object.assign(appt, data, { updatedAt: new Date().toISOString() });
+return true;
+}
+return false;
+},
+
+updateAppointmentStatus(id, newStatus) {
+const appointments = StateManager.get('appointments');
+const appt = appointments.find(a => a.id === id);
+if (appt) {
+appt.status = newStatus;
+appt.updatedAt = new Date().toISOString();
+return true;
+}
+return false;
+},
+
+deleteAppointment(id) {
+const appointments = StateManager.get('appointments');
+const initialLength = appointments.length;
+StateManager.set('appointments', appointments.filter(a => a.id !== id));
+return StateManager.get('appointments').length < initialLength;
+},
+
+getAppointmentById(id) {
+return StateManager.get('appointments').find(a => a.id === id);
+},
+
+changePage(delta) {
+const filteredData = getFilteredData();
+const totalPages = getTotalPages(filteredData);
+const currentPage = StateManager.get('currentPage');
+const newPage = currentPage + delta;
+
+if (newPage >= 1 && newPage <= totalPages) {
+StateManager.set('currentPage', newPage);
+return true;
+}
+return false;
+},
+
+goToPage(page) {
+const filteredData = getFilteredData();
+const totalPages = getTotalPages(filteredData);
+
+if (page >= 1 && page <= totalPages) {
+StateManager.set('currentPage', page);
+return true;
+}
+return false;
+},
+
+setSortConfig(column) {
+const currentColumn = StateManager.get('sortColumn');
+const currentDirection = StateManager.get('sortDirection');
+const newDirection = currentColumn === column && currentDirection === 'asc' ? 'desc' : 'asc';
+
+StateManager.setPartial({
+sortColumn: column,
+sortDirection: newDirection
+});
+},
+
+setItemsPerPage(limit) {
+StateManager.setPartial({
+itemsPerPage: limit,
+currentPage: 1
+});
+},
+
+setFilters(filters) {
+StateManager.set('filters', { ...filters });
+StateManager.set('currentPage', 1);
+},
+
+clearFilters() {
+const emptyFilters = { status: '', area: '', date: '', searchTerm: '' };
+StateManager.set('filters', emptyFilters);
+StateManager.set('currentPage', 1);
+}
+
+};
+})();
+
+// ==================== VIEW LAYER (DOM MANIPULATION ONLY) ====================
+const View = (function() {
+function getElement(id) {
+return document.getElementById(id);
+}
+
+function animateValue(id, start, end, duration) {
+const element = getElement(id);
+if (!element) return;
+
+let startTimestamp = null;
+const step = (timestamp) => {
+if (!startTimestamp) startTimestamp = timestamp;
+const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+element.textContent = Math.floor(progress * (end - start) + start);
+if (progress < 1) {
+window.requestAnimationFrame(step);
+}
+};
+window.requestAnimationFrame(step);
+
+}
+
+return {
+updateMetrics(metrics) {
+animateValue('metric-total', 0, metrics.total, 1000);
+animateValue('metric-pending', 0, metrics.pending, 1000);
+animateValue('metric-confirmed', 0, metrics.confirmed, 1000);
+animateValue('metric-rescheduled', 0, metrics.rescheduled, 1000);
+animateValue('metric-cancelled', 0, metrics.cancelled, 1000);
+},
+
+renderTable(pageData) {
+const tbody = getElement('table-body');
+if (!tbody) return;
+
+if (!pageData || pageData.length === 0) {
+tbody.innerHTML =     <tr>     <td colspan="7" class="px-4 py-12 text-center text-gray-500">     <i class="ri-inbox-line text-4xl mb-2"></i>     <p>Nenhum agendamento encontrado</p>     </td>     </tr>    ;
+return;
+}
+
+tbody.innerHTML = pageData.map(appt =>     <tr class="table-row border-b hover:bg-gray-50">     <td class="px-4 py-3">     <div>     <p class="font-medium text-gray-900">${Utils.sanitizeHTML(appt.nome)}</p>     <p class="text-sm text-gray-500">${Utils.sanitizeHTML(appt.email)}</p>     </div>     </td>     <td class="px-4 py-3 text-gray-700 hidden-mobile">${Utils.sanitizeHTML(appt.telefone)}</td>     <td class="px-4 py-3 text-gray-700">${Utils.formatDateTime(appt.dataHora)}</td>     <td class="px-4 py-3">     <span class="area-tag">${Utils.sanitizeHTML(appt.area)}</span>     </td>     <td class="px-4 py-3 text-gray-700 hidden-mobile">${Utils.sanitizeHTML(appt.tipo)}</td>     <td class="px-4 py-3">     <span class="status-badge status-${appt.status.toLowerCase()}">${Utils.sanitizeHTML(appt.status)}</span>     </td>     <td class="px-4 py-3 relative">     <div class="relative">     <button onclick="toggleDropdown('${appt.id}')" class="p-2 hover:bg-gray-100 rounded-lg">     <i class="ri-more-2-fill text-gray-600"></i>     </button>     <div id="dropdown-${appt.id}" class="dropdown-menu">     <button onclick="editAppointment('${appt.id}')" class="dropdown-item w-full text-left flex items-center gap-2">     <i class="ri-edit-line"></i> Editar     </button>     <button onclick="updateStatus('${appt.id}', 'Confirmado')" class="dropdown-item w-full text-left flex items-center gap-2">     <i class="ri-checkbox-circle-line text-green-600"></i> Confirmar     </button>     <button onclick="updateStatus('${appt.id}', 'Cancelado')" class="dropdown-item w-full text-left flex items-center gap-2">     <i class="ri-close-circle-line text-red-600"></i> Cancelar     </button>     <button onclick="openDeleteModal('${appt.id}')" class="dropdown-item w-full text-left flex items-center gap-2 text-red-600">     <i class="ri-delete-bin-line"></i> Excluir     </button>     </div>     </div>     </td>     </tr>    ).join('');
+},
+
+renderPagination(totalPages, currentPage) {
+const container = getElement('pagination-buttons');
+const prevBtn = getElement('prev-btn');
+const nextBtn = getElement('next-btn');
+
+if (!container || !prevBtn || !nextBtn) return;
+
+if (totalPages <= 1) {
+container.innerHTML = '';
+prevBtn.disabled = true;
+nextBtn.disabled = true;
+return;
+}
+
+prevBtn.disabled = currentPage === 1;
+nextBtn.disabled = currentPage === totalPages;
+
+let buttons = [];
+const maxVisible = 5;
+let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+if (endPage - startPage + 1 < maxVisible) {
+startPage = Math.max(1, endPage - maxVisible + 1);
+}
+
+for (let i = startPage; i <= endPage; i++) {
+buttons.push(    <button class="pagination-btn px-3 py-1 rounded ${currentPage === i ? 'active' : ''}" onclick="goToPage(${i})">     ${i}     </button>    );
+}
+container.innerHTML = buttons.join('');
+},
+
+updateTableInfo(start, end, total) {
+const info = getElement('table-info');
+if (!info) return;
+info.textContent = Exibindo ${total > 0 ? ${start}-${end} : '0'} de ${total} registros;
+},
+
+populateEditForm(appt) {
+if (!appt) return;
+getElement('edit-id').value = appt.id;
+getElement('edit-nome').value = appt.nome;
+getElement('edit-email').value = appt.email;
+getElement('edit-telefone').value = appt.telefone;
+getElement('edit-area').value = appt.area;
+getElement('edit-status').value = appt.status;
+getElement('edit-tipo').value = appt.tipo;
+const date = new Date(appt.dataHora);
+getElement('edit-dataHora').value = date.toISOString().slice(0, 16);
+},
+
+openEditModal() {
+const modal = getElement('edit-modal');
+if (!modal) return;
+modal.classList.remove('hidden');
+setTimeout(() => {
+modal.querySelector('.modal').classList.add('show');
+}, 10);
+},
+
+closeEditModal() {
+const modal = getElement('edit-modal');
+if (!modal) return;
+modal.querySelector('.modal').classList.remove('show');
+setTimeout(() => {
+modal.classList.add('hidden');
+}, 300);
+},
+
+openDeleteModal() {
+const modal = getElement('delete-modal');
+if (!modal) return;
+modal.classList.remove('hidden');
+setTimeout(() => {
+modal.querySelector('.modal').classList.add('show');
+}, 10);
+},
+
+closeDeleteModal() {
+const modal = getElement('delete-modal');
+if (!modal) return;
+modal.querySelector('.modal').classList.remove('show');
+setTimeout(() => {
+modal.classList.add('hidden');
+}, 300);
+},
+
+toggleDropdown(id) {
+const dropdown = getElement(dropdown-${id});
+if (dropdown) dropdown.classList.toggle('show');
+},
+
+closeAllDropdowns() {
+document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+},
+
+showToast(title, message) {
+getElement('toast-title').textContent = title;
+getElement('toast-message').textContent = message;
+const toast = getElement('toast');
+toast.classList.add('show');
+setTimeout(() => {
+toast.classList.remove('show');
+}, 3000);
+},
+
+getFilterValues() {
+return {
+status: getElement('filter-status').value,
+area: getElement('filter-area').value,
+date: getElement('filter-date').value,
+searchTerm: getElement('search-input').value
+};
+},
+
+setFilterValues(filters) {
+getElement('filter-status').value = filters.status || '';
+getElement('filter-area').value = filters.area || '';
+getElement('filter-date').value = filters.date || '';
+getElement('search-input').value = filters.searchTerm || '';
+},
+
+getItemsPerPage() {
+return parseInt(getElement('items-per-page').value) || 25;
+}
+
+};
+})();
+
+// ==================== CONTROLLER LAYER (COORDINATES ALL LAYERS) ====================
+const Controller = (function() {
+let searchTimer = null;
+
+function refreshUI() {
+const filteredData = BusinessLogic.getFilteredData();
+const pageData = BusinessLogic.getPaginatedData(filteredData);
+const totalPages = BusinessLogic.getTotalPages(filteredData);
+const currentPage = StateManager.get('currentPage');
+const itemsPerPage = StateManager.get('itemsPerPage');
+const metrics = BusinessLogic.calculateMetrics();
+
+View.renderTable(pageData);
+View.renderPagination(totalPages, currentPage);
+
+const start = (currentPage - 1) * itemsPerPage + 1;
+const end = Math.min(currentPage * itemsPerPage, filteredData.length);
+View.updateTableInfo(start, end, filteredData.length);
+View.updateMetrics(metrics);
+
+}
+
+function handleSearchInput(searchTerm) {
+if (searchTimer) clearTimeout(searchTimer);
+searchTimer = setTimeout(() => {
+BusinessLogic.setFilters({
+...StateManager.get('filters'),
+searchTerm: searchTerm.toLowerCase()
+});
+refreshUI();
+searchTimer = null;
+}, 300);
+}
+
+return {
+init() {
+// Initialize data
+StateManager.set('appointments', DataService.generateMockData(124));
+
+// Setup event listeners with cleanup tracking
+StateManager.addEventListener(document, 'keydown', (e) => {
+if (e.key === 'Escape') {
+View.closeEditModal();
+View.closeDeleteModal();
+}
+});
+
+StateManager.addEventListener(document, 'click', (e) => {
+if (!e.target.closest('.relative')) {
+View.closeAllDropdowns();
+}
+});
+
+// Initial render
+refreshUI();
+},
+
+applyFilters() {
+const filterValues = View.getFilterValues();
+const searchInput = document.getElementById('search-input');
+
+// Check if search input is focused for debounce
+if (document.activeElement === searchInput && filterValues.searchTerm) {
+handleSearchInput(filterValues.searchTerm);
+} else {
+BusinessLogic.setFilters({
+status: filterValues.status,
+area: filterValues.area,
+date: filterValues.date,
+searchTerm: filterValues.searchTerm.toLowerCase()
+});
+refreshUI();
+}
+},
+
+clearFilters() {
+BusinessLogic.clearFilters();
+View.setFilterValues({ status: '', area: '', date: '', searchTerm: '' });
+refreshUI();
+View.showToast('Filtros', 'Filtros limpos com sucesso!');
+},
+
+sortTable(column) {
+BusinessLogic.setSortConfig(column);
+refreshUI();
+},
+
+changePage(delta) {
+if (BusinessLogic.changePage(delta)) {
+refreshUI();
+}
+},
+
+goToPage(page) {
+if (BusinessLogic.goToPage(page)) {
+refreshUI();
+}
+},
+
+changeItemsPerPage() {
+const limit = View.getItemsPerPage();
+BusinessLogic.setItemsPerPage(limit);
+refreshUI();
+},
+
+editAppointment(id) {
+const appt = BusinessLogic.getAppointmentById(id);
+if (!appt) return;
+StateManager.set('editId', id);
+View.populateEditForm(appt);
+View.openEditModal();
+View.closeAllDropdowns();
+},
+
+saveAppointment(event) {
+event.preventDefault();
+const editId = StateManager.get('editId');
+if (!editId) return;
+
+const data = {
+nome: document.getElementById('edit-nome').value,
+email: document.getElementById('edit-email').value,
+telefone: document.getElementById('edit-telefone').value,
+area: document.getElementById('edit-area').value,
+status: document.getElementById('edit-status').value,
+tipo: document.getElementById('edit-tipo').value,
+dataHora: new Date(document.getElementById('edit-dataHora').value).toISOString()
+};
+
+if (BusinessLogic.updateAppointment(editId, data)) {
+View.closeEditModal();
+refreshUI();
+View.showToast('Sucesso', 'Agendamento atualizado com sucesso!');
+}
+},
+
+updateStatus(id, newStatus) {
+if (BusinessLogic.updateAppointmentStatus(id, newStatus)) {
+refreshUI();
+View.showToast('Status atualizado', Agendamento ${newStatus.toLowerCase()});
+}
+View.closeAllDropdowns();
+},
+
+openDeleteModal(id) {
+StateManager.set('deleteId', id);
+View.openDeleteModal();
+View.closeAllDropdowns();
+},
+
+closeDeleteModal() {
+View.closeDeleteModal();
+StateManager.set('deleteId', null);
+},
+
+confirmDelete() {
+const deleteId = StateManager.get('deleteId');
+if (!deleteId) return;
+
+if (BusinessLogic.deleteAppointment(deleteId)) {
+View.closeDeleteModal();
+refreshUI();
+View.showToast('Excluído', 'Agendamento removido com sucesso!');
+StateManager.set('deleteId', null);
+}
+},
+
+closeModal() {
+View.closeEditModal();
+StateManager.set('editId', null);
+},
+
+toggleDropdown(id) {
+View.closeAllDropdowns();
+View.toggleDropdown(id);
+},
+
+exportCSV() {
+const filteredData = BusinessLogic.getFilteredData();
+const filename = agendamentos-${new Date().toISOString().split('T')[0]}.csv;
+Utils.exportToCSV(filteredData, filename);
+View.showToast('Exportação', 'CSV exportado com sucesso!');
+},
+
+logout() {
+if (confirm('Tem certeza que deseja sair do sistema?')) {
+View.showToast('Saindo...', 'Redirecionando para login...');
+setTimeout(() => {
+alert('Logout realizado! (Em produção, redirecionaria para login)');
+}, 1000);
+}
+},
+
+cleanup() {
+if (searchTimer) clearTimeout(searchTimer);
+StateManager.cleanup();
+}
+
+};
+})();
+
+// ==================== GLOBAL BRIDGE (For HTML onclick compatibility) ====================
+window.applyFilters = () => Controller.applyFilters();
+window.clearFilters = () => Controller.clearFilters();
+window.sortTable = (column) => Controller.sortTable(column);
+window.changePage = (delta) => Controller.changePage(delta);
+window.goToPage = (page) => Controller.goToPage(page);
+window.changeItemsPerPage = () => Controller.changeItemsPerPage();
+window.editAppointment = (id) => Controller.editAppointment(id);
+window.saveAppointment = (event) => Controller.saveAppointment(event);
+window.updateStatus = (id, status) => Controller.updateStatus(id, status);
+window.openDeleteModal = (id) => Controller.openDeleteModal(id);
+window.closeDeleteModal = () => Controller.closeDeleteModal();
+window.confirmDelete = () => Controller.confirmDelete();
+window.closeModal = () => Controller.closeModal();
+window.toggleDropdown = (id) => Controller.toggleDropdown(id);
+window.exportCSV = () => Controller.exportCSV();
+window.logout = () => Controller.logout();
+
+// ==================== INITIALIZATION ====================
+(function bootstrap() {
+Controller.init();
+})();
+
+// ==================== CLEANUP ON PAGE UNLOAD ====================
+window.addEventListener('beforeunload', () => {
+Controller.cleanup();
+});
+</script>
+
+</body>    
+</html>  
